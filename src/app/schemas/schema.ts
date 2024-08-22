@@ -1,17 +1,25 @@
-import { relations } from 'drizzle-orm';
+import {
+  relations,
+  sql,
+} from 'drizzle-orm';
 import {
   boolean,
+  date,
   integer,
+  pgEnum,
   pgTable,
-  serial,
   text,
   timestamp,
+  uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 
+export const role = pgEnum("role", ["user", "assistant"]);
+export const plans = pgEnum("role", ["STANDARD", "PRO", "ULTIMATE"]);
+
 // Users Table
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   fullName: text("fullname").notNull(),
   clerkId: text("clerkId").notNull().unique(),
   type: text("type").notNull(),
@@ -24,24 +32,30 @@ export const users = pgTable("users", {
 
 // Domain Table
 export const domain = pgTable("domain", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  icon: text("icon").notNull(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  icon: varchar("icon").notNull(),
+  userId: uuid("userId").references(() => users.id, { onDelete: "cascade" }),
+  campaignId: uuid("campaignId").references(() => campaigns.id),
 });
 
 // ChatBot Table
 export const chatBot = pgTable("chat_bot", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   welcomeMessage: text("welcome_message"),
   icon: text("icon"),
   background: text("background"),
   textColor: text("text_color"),
   helpdesk: boolean("helpdesk").default(false),
+  domainId: integer("domain_id").references(() => domain.id, {
+    onDelete: "cascade",
+  }),
 });
 
 // Billings Table
 export const billings = pgTable("billings", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  plan: plans("plan").notNull().default("STANDARD"),
   credits: integer("credits").default(10),
   userId: integer("user_id")
     .notNull()
@@ -51,7 +65,7 @@ export const billings = pgTable("billings", {
 
 // HelpDesk Table
 export const helpDesk = pgTable("help_desk", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   question: text("question").notNull(),
   answer: text("answer").notNull(),
   domainId: integer("domain_id").references(() => domain.id, {
@@ -61,7 +75,7 @@ export const helpDesk = pgTable("help_desk", {
 
 // FilterQuestions Table
 export const filterQuestions = pgTable("filter_questions", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   question: text("question").notNull(),
   answered: text("answered"),
   domainId: integer("domain_id").references(() => domain.id, {
@@ -71,14 +85,17 @@ export const filterQuestions = pgTable("filter_questions", {
 
 // CustomerResponses Table
 export const customerResponses = pgTable("customer_responses", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   question: text("question").notNull(),
   answered: text("answered"),
+  customerId: integer("customer_id").references(() => customer.id, {
+    onDelete: "cascade",
+  }),
 });
 
 // ChatRoom Table
-export const chatRoom = pgTable("chat_room", {
-  id: serial("id").primaryKey(),
+export const chatRooms = pgTable("chat_room", {
+  id: uuid("id").primaryKey().defaultRandom(),
   live: boolean("live").default(false),
   mailed: boolean("mailed").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -91,36 +108,100 @@ export const chatRoom = pgTable("chat_room", {
 });
 
 // ChatMessage Table
-export const chatMessage = pgTable("chat_message", {
-  id: serial("id").primaryKey(),
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
   message: varchar("message").notNull(),
+  role: role("role"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
     .$onUpdate(() => new Date()),
-  chatRoomId: integer("chat_room_id").references(() => chatRoom.id, {
+  chatRoomId: integer("chat_room_id").references(() => chatRooms.id, {
     onDelete: "cascade",
   }),
+  seen: boolean("seen").default(false),
 });
 
 // Customer Table
 export const customer = pgTable("customer", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   email: text("email"),
   domainId: integer("domain_id").references(() => domain.id, {
     onDelete: "cascade",
   }),
 });
 
-export const chatRoomRelations = relations(chatRoom, ({ many }) => ({
-  messages: many(chatMessage),
+// Bookings table
+export const bookings = pgTable("bookings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  date: date("date").notNull(),
+  slot: text("slot").notNull(),
+  email: text("email").notNull(),
+  customerId: integer("customer_id").references(() => customer.id, {
+    onDelete: "cascade",
+  }),
+  domainId: uuid("domainId").defaultRandom(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Campaign table
+export const campaigns = pgTable("campaigns", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  customers: text("customers").array().notNull(),
+  template: text("template"),
+  userId: uuid("user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Campaign table
+export const products = pgTable("products", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  price: integer("price").notNull(),
+  image: text("image"),
+  createdAt: timestamp("created_at").defaultNow(),
+  domainId: integer("domain_id").references(() => domain.id, {
+    onDelete: "cascade",
+  }),
+});
+
+export const campaignRelations = relations(campaigns, ({ many }) => ({
+  domain: many(domain),
 }));
 
-export const chatMessageRelations = relations(chatMessage, ({ one }) => ({
-  chatRoom: one(chatRoom),
+export const userRelations = relations(users, ({ many }) => ({
+  domain: many(domain),
+  campaign: many(campaigns),
+  subscription: many(billings),
+}));
+
+export const domainRelations = relations(domain, ({ one, many }) => ({
+  user: one(users, {
+    fields: [domain.userId],
+    references: [users.id],
+  }),
+  campaign: one(campaigns, {
+    fields: [domain.campaignId],
+    references: [campaigns.id],
+  }),
+  chatBot: one(chatBot),
+  helpdesk: many(helpDesk),
+  filterQuestions: many(filterQuestions),
+  products: many(products),
+  customers: many(customer),
+}));
+
+export const chatRoomRelations = relations(chatRooms, ({ many }) => ({
+  messages: many(chatMessages),
 }));
 
 export const customerRelations = relations(customer, ({ many }) => ({
-  responses: many(customerResponses),
-  chatRooms: many(chatRoom),
+  questions: many(customerResponses),
+  chatRoom: many(chatRooms),
+  booking: many(bookings),
 }));
