@@ -1,5 +1,5 @@
 {
-  "id": "5497d7a1-07f7-40cd-a214-a67412ebaa59",
+  "id": "eccb79f0-a94d-4089-b31b-c2dd2c691d10",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -17,7 +17,7 @@
         },
         "plan": {
           "name": "plan",
-          "type": "role",
+          "type": "plans",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -32,7 +32,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         }
@@ -95,7 +95,7 @@
         },
         "customer_id": {
           "name": "customer_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -225,7 +225,7 @@
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }
@@ -288,7 +288,7 @@
         },
         "chat_room_id": {
           "name": "chat_room_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -359,7 +359,7 @@
         },
         "customer_id": {
           "name": "customer_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }
@@ -402,7 +402,7 @@
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }
@@ -451,7 +451,7 @@
         },
         "customer_id": {
           "name": "customer_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }
@@ -568,7 +568,7 @@
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }
@@ -617,7 +617,7 @@
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }
@@ -660,7 +660,7 @@
         },
         "price": {
           "name": "price",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -679,7 +679,7 @@
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }
@@ -767,6 +767,15 @@
     }
   },
   "enums": {
+    "public.plans": {
+      "name": "plans",
+      "schema": "public",
+      "values": [
+        "STANDARD",
+        "PRO",
+        "ULTIMATE"
+      ]
+    },
     "public.role": {
       "name": "role",
       "schema": "public",

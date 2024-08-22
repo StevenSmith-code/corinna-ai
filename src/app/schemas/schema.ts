@@ -15,7 +15,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const role = pgEnum("role", ["user", "assistant"]);
-export const plans = pgEnum("role", ["STANDARD", "PRO", "ULTIMATE"]);
+export const plans = pgEnum("plans", ["STANDARD", "PRO", "ULTIMATE"]);
 
 // Users Table
 export const users = pgTable("users", {
@@ -47,7 +47,7 @@ export const chatBot = pgTable("chat_bot", {
   background: text("background"),
   textColor: text("text_color"),
   helpdesk: boolean("helpdesk").default(false),
-  domainId: integer("domain_id").references(() => domain.id, {
+  domainId: uuid("domain_id").references(() => domain.id, {
     onDelete: "cascade",
   }),
 });
@@ -57,7 +57,7 @@ export const billings = pgTable("billings", {
   id: uuid("id").primaryKey().defaultRandom(),
   plan: plans("plan").notNull().default("STANDARD"),
   credits: integer("credits").default(10),
-  userId: integer("user_id")
+  userId: uuid("user_id")
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -68,7 +68,7 @@ export const helpDesk = pgTable("help_desk", {
   id: uuid("id").primaryKey().defaultRandom(),
   question: text("question").notNull(),
   answer: text("answer").notNull(),
-  domainId: integer("domain_id").references(() => domain.id, {
+  domainId: uuid("domain_id").references(() => domain.id, {
     onDelete: "cascade",
   }),
 });
@@ -78,7 +78,7 @@ export const filterQuestions = pgTable("filter_questions", {
   id: uuid("id").primaryKey().defaultRandom(),
   question: text("question").notNull(),
   answered: text("answered"),
-  domainId: integer("domain_id").references(() => domain.id, {
+  domainId: uuid("domain_id").references(() => domain.id, {
     onDelete: "cascade",
   }),
 });
@@ -88,7 +88,7 @@ export const customerResponses = pgTable("customer_responses", {
   id: uuid("id").primaryKey().defaultRandom(),
   question: text("question").notNull(),
   answered: text("answered"),
-  customerId: integer("customer_id").references(() => customer.id, {
+  customerId: uuid("customer_id").references(() => customer.id, {
     onDelete: "cascade",
   }),
 });
@@ -102,7 +102,7 @@ export const chatRooms = pgTable("chat_room", {
   updatedAt: timestamp("updated_at")
     .notNull()
     .$onUpdate(() => new Date()),
-  customerId: integer("customer_id").references(() => customer.id, {
+  customerId: uuid("customer_id").references(() => customer.id, {
     onDelete: "cascade",
   }),
 });
@@ -116,7 +116,7 @@ export const chatMessages = pgTable("chat_messages", {
   updatedAt: timestamp("updated_at")
     .notNull()
     .$onUpdate(() => new Date()),
-  chatRoomId: integer("chat_room_id").references(() => chatRooms.id, {
+  chatRoomId: uuid("chat_room_id").references(() => chatRooms.id, {
     onDelete: "cascade",
   }),
   seen: boolean("seen").default(false),
@@ -126,7 +126,7 @@ export const chatMessages = pgTable("chat_messages", {
 export const customer = pgTable("customer", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email"),
-  domainId: integer("domain_id").references(() => domain.id, {
+  domainId: uuid("domain_id").references(() => domain.id, {
     onDelete: "cascade",
   }),
 });
@@ -137,7 +137,7 @@ export const bookings = pgTable("bookings", {
   date: date("date").notNull(),
   slot: text("slot").notNull(),
   email: text("email").notNull(),
-  customerId: integer("customer_id").references(() => customer.id, {
+  customerId: uuid("customer_id").references(() => customer.id, {
     onDelete: "cascade",
   }),
   domainId: uuid("domainId").defaultRandom(),
@@ -162,10 +162,10 @@ export const products = pgTable("products", {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  price: integer("price").notNull(),
+  price: uuid("price").notNull(),
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow(),
-  domainId: integer("domain_id").references(() => domain.id, {
+  domainId: uuid("domain_id").references(() => domain.id, {
     onDelete: "cascade",
   }),
 });

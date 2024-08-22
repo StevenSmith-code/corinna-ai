@@ -1,4 +1,10 @@
 DO $$ BEGIN
+ CREATE TYPE "public"."plans" AS ENUM('STANDARD', 'PRO', 'ULTIMATE');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  CREATE TYPE "public"."role" AS ENUM('user', 'assistant');
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -6,9 +12,9 @@ END $$;
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "billings" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"plan" "role" DEFAULT 'STANDARD' NOT NULL,
+	"plan" "plans" DEFAULT 'STANDARD' NOT NULL,
 	"credits" integer DEFAULT 10,
-	"user_id" integer NOT NULL,
+	"user_id" uuid NOT NULL,
 	CONSTRAINT "billings_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
@@ -17,7 +23,7 @@ CREATE TABLE IF NOT EXISTS "bookings" (
 	"date" date NOT NULL,
 	"slot" text NOT NULL,
 	"email" text NOT NULL,
-	"customer_id" integer,
+	"customer_id" uuid,
 	"domainId" uuid DEFAULT gen_random_uuid(),
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
@@ -38,7 +44,7 @@ CREATE TABLE IF NOT EXISTS "chat_bot" (
 	"background" text,
 	"text_color" text,
 	"helpdesk" boolean DEFAULT false,
-	"domain_id" integer
+	"domain_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "chat_messages" (
@@ -47,7 +53,7 @@ CREATE TABLE IF NOT EXISTS "chat_messages" (
 	"role" "role",
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp NOT NULL,
-	"chat_room_id" integer,
+	"chat_room_id" uuid,
 	"seen" boolean DEFAULT false
 );
 --> statement-breakpoint
@@ -57,20 +63,20 @@ CREATE TABLE IF NOT EXISTS "chat_room" (
 	"mailed" boolean DEFAULT false,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp NOT NULL,
-	"customer_id" integer
+	"customer_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "customer" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text,
-	"domain_id" integer
+	"domain_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "customer_responses" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"question" text NOT NULL,
 	"answered" text,
-	"customer_id" integer
+	"customer_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "domain" (
@@ -85,23 +91,23 @@ CREATE TABLE IF NOT EXISTS "filter_questions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"question" text NOT NULL,
 	"answered" text,
-	"domain_id" integer
+	"domain_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "help_desk" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"question" text NOT NULL,
 	"answer" text NOT NULL,
-	"domain_id" integer
+	"domain_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
-	"price" integer NOT NULL,
+	"price" uuid NOT NULL,
 	"image" text,
 	"created_at" timestamp DEFAULT now(),
-	"domain_id" integer
+	"domain_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
